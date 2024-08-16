@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-router.get('/feedback', function(req, res) {
+router.get('/feedback', (req, res) => {
 
   res.render('feedback', {
     pageTitle: 'Feedback',
