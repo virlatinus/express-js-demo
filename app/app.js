@@ -1,8 +1,9 @@
 var express = require('express');
+var http = require('http');
 var reload = require('reload');
-var app = express();
 var dataFile = require('./data/data.json');
-var io = require('socket.io')();
+
+var app = express();
 
 app.set('port', process.env.PORT || 3000 );
 app.set('appData', dataFile);
@@ -19,15 +20,24 @@ app.use(require('./routes/feedback'));
 app.use(require('./routes/api'));
 app.use(require('./routes/chat'));
 
-var server = app.listen(app.get('port'), function() {
-  console.log('Listening on port ' + app.get('port'));
-});
+var server = http.createServer(app);
 
-io.attach(server);
+var io = require('socket.io')(server);
+
 io.on('connection', function(socket) {
   socket.on('postMessage', function(data) {
     io.emit('updateMessages', data);
   });
 });
 
-reload(server, app);
+reload(app).then(function () {
+  // reloadReturned is documented in the returns API in the README
+
+  // Reload started, start web server
+  server.listen(app.get('port'), function () {
+    console.log('Web server started');
+    console.log('Point your browser to: http://localhost:' + app.get('port'));
+  })
+}).catch(function (err) {
+  console.error('Reload could not start, could not start server/sample app', err)
+})
